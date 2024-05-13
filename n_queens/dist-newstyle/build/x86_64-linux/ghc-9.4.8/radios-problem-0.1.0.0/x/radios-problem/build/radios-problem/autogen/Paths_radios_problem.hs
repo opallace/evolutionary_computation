@@ -46,12 +46,12 @@ getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: 
 
 
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
-bindir     = "/home/udesc/.cabal/bin"
-libdir     = "/home/udesc/.cabal/lib/x86_64-linux-ghc-9.4.8/radios-problem-0.1.0.0-inplace-radios-problem"
-dynlibdir  = "/home/udesc/.cabal/lib/x86_64-linux-ghc-9.4.8"
-datadir    = "/home/udesc/.cabal/share/x86_64-linux-ghc-9.4.8/radios-problem-0.1.0.0"
-libexecdir = "/home/udesc/.cabal/libexec/x86_64-linux-ghc-9.4.8/radios-problem-0.1.0.0"
-sysconfdir = "/home/udesc/.cabal/etc"
+bindir     = "/home/opallace/.cabal/bin"
+libdir     = "/home/opallace/.cabal/lib/x86_64-linux-ghc-9.4.8/radios-problem-0.1.0.0-inplace-radios-problem"
+dynlibdir  = "/home/opallace/.cabal/lib/x86_64-linux-ghc-9.4.8"
+datadir    = "/home/opallace/.cabal/share/x86_64-linux-ghc-9.4.8/radios-problem-0.1.0.0"
+libexecdir = "/home/opallace/.cabal/libexec/x86_64-linux-ghc-9.4.8/radios-problem-0.1.0.0"
+sysconfdir = "/home/opallace/.cabal/etc"
 
 getBinDir     = catchIO (getEnv "radios_problem_bindir")     (\_ -> return bindir)
 getLibDir     = catchIO (getEnv "radios_problem_libdir")     (\_ -> return libdir)

@@ -36,33 +36,19 @@ evaluate_chromosome :: Chromosome -> Float
 evaluate_chromosome (IntegerPermutedChromosome _ alleles) = 0
 
 ------------------------------------- CROSSOVER --------------------------------------------
-cycleCrossover :: Chromosome -> Chromosome -> (Chromosome, Chromosome)
-cycleCrossover parent1 parent2 = (child1, child2)
-  where
-    (startIdx, endIdx) = getRandomIndices (length parent1)
-    cycles = getCycles parent1 parent2 startIdx endIdx []
-    child1 = generateChild parent1 cycles
-    child2 = generateChild parent2 cycles
+find_element :: [Int] -> Int -> Int -> Int
+find_element (x:xs) e i | e == x = i 
+                        | otherwise = find_element xs e (i + 1)
 
-getRandomIndices :: Int -> (Int, Int)
-getRandomIndices n = (idx1, idx2)
-  where
-    [idx1, idx2] = take 2 . randomRs (0, n - 1) $ mkStdGen 42
+get_cycle :: [Int] -> [Int] -> Int -> Int -> ([Int], [Int])
+get_cycle p1 p2 ini next = 
+  let index = find_element p1 next 0
+      ele   = p2 !! index
+  in if ini == ele then ([next], [ele])
+     else let retorno = get_cycle p1 p2 ini
 
-getCycles :: Chromosome -> Chromosome -> Int -> Int -> [([Int], [Int])] -> [([Int], [Int])]
-getCycles parent1 parent2 idx1 idx2 cycles
-  | elem idx1 (map fst cycles) = cycles
-  | otherwise = getCycles parent1 parent2 nextIdx1 nextIdx2 newCycles
-  where
-    nextIdx1 = fromMaybe (error "Index not found in parent2") $ elemIndex (parent2 !! idx1) parent1
-    nextIdx2 = fromMaybe (error "Index not found in parent1") $ elemIndex (parent1 !! idx2) parent2
-    newCycles = (idx1, idx2) : cycles
+cycle_crossover :: Chromosome -> Chromosome -> Chromosome
 
-generateChild :: Chromosome -> [([Int], [Int])] -> Chromosome
-generateChild parent cycles = map (\x -> if x `elem` selected then parent2 !! (fromJust (elemIndex x parent2)) else x) parent
-  where
-    (selected, _) = unzip . concatMap (\(cycle1, cycle2) -> cycle1 ++ cycle2) $ cycles
-    parent2 = filter (`notElem` selected) parent
 
 ------------------------------------- MUTATION --------------------------------------------
 swap :: Int -> Int -> [a] -> [a]

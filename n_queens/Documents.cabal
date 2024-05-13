@@ -13,9 +13,9 @@ common warnings
 executable radios-problem
     import:           warnings
     main-is:          Main.hs
-    other-modules:    Chromosome
-                      DataTypes
-                      Population
+    -- other-modules:    Chromosome
+    --                   DataTypes
+    --                   Population
     build-depends:    base ^>=4.17.2.1,
                       random >= 1.2
     hs-source-dirs:   app
