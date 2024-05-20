@@ -1,5 +1,5 @@
 cabal-version:      3.0
-name:               radios-problem
+name:               n-queens
 version:            0.1.0.0
 license:            MIT
 license-file:       LICENSE
@@ -10,13 +10,13 @@ extra-doc-files:    CHANGELOG.md
 common warnings
     ghc-options: -Wall
 
-executable radios-problem
+executable n-queens
     import:           warnings
     main-is:          Main.hs
-    -- other-modules:    Chromosome
-    --                   DataTypes
-    --                   Population
-    build-depends:    base ^>=4.17.2.1,
+    other-modules:    Chromosome
+                      DataTypes
+                      Population
+    build-depends:    base >=4.13,
                       random >= 1.2
     hs-source-dirs:   app
                       app/modules
