@@ -34,6 +34,9 @@ best_fitness_selection' ((BinaryChromosome a b):xs) (BinaryChromosome c d)  | a 
 best_fitness_selection :: Population -> Chromosome
 best_fitness_selection ((BinaryChromosome a b):xs) =  best_fitness_selection' xs (BinaryChromosome a b)
 
+n_best_fitness_selection :: Int -> Population -> Population
+n_best_fitness_selection n population = take n $ reverse $ sort population
+
 random_element :: Population -> IO Chromosome
 random_element population = do
     index <- randomRIO (0, length population - 1)
@@ -44,7 +47,7 @@ random_elements population n = sequence $ replicate n (random_element population
 
 tournament_selection :: Population -> IO Chromosome
 tournament_selection population = do
-    random_chromosomes <- random_elements population 10
+    random_chromosomes <- random_elements population 2
     return $ best_fitness_selection random_chromosomes
 
 ------------------------------------- GENERATION --------------------------------------------
@@ -64,14 +67,17 @@ evolve population n = do
 genetic_algorithm :: Population -> Int -> IO ()
 genetic_algorithm _ 0 = return ()
 genetic_algorithm population max_generations = do
-    let evaluated_population = evaluate_population population
-    new_generation <- evolve evaluated_population (length evaluated_population)
+    let elit = n_best_fitness_selection 1 population
 
-    let evaluated_new_generation = evaluate_population new_generation
-    let (BinaryChromosome f a) = best_fitness_selection evaluated_new_generation
-
-    print (BinaryChromosome f a)
+    new_generation <- evolve population ((length population) - 1)
     
-    genetic_algorithm evaluated_new_generation (max_generations - 1)
+    let ep   = evaluate_population (new_generation++elit)
+    let av   = average_fitness_population ep (length ep)
+    let best = best_fitness_selection ep
 
+    putStr $ show (fitness_chromossome best) ++ " " ++ show av ++ "\n"
+
+    if (fitness_chromossome best) /= 0.7481618 then
+        genetic_algorithm ep (max_generations - 1)
+    else print best
     

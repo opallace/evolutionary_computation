@@ -6,6 +6,13 @@ import Control.Monad
 import Data.List
 import DataTypes
 
+
+instance Eq Chromosome where
+    (==) a b = (==) (fitness_chromossome a) (fitness_chromossome b)
+
+instance Ord Chromosome where 
+    compare a b = compare (fitness_chromossome a) (fitness_chromossome b)
+
 ------------------------------------- GETS --------------------------------------------
 fitness_chromossome :: Chromosome -> Int
 fitness_chromossome (BinaryChromosome f _) = f
@@ -54,9 +61,11 @@ uniform_crossover_alleles (x:xs) (x':xs') = do
 
 uniform_crossover_chromosomes :: Chromosome -> Chromosome -> IO Chromosome
 uniform_crossover_chromosomes (BinaryChromosome _ alleles1) (BinaryChromosome _ alleles2) = do
-    new_alleles <- (uniform_crossover_alleles alleles1 alleles2)
-    return (BinaryChromosome 0 new_alleles)
-
+    cross <- randomRIO (1, 100::Int)
+    if cross <= 50 then do
+        new_alleles <- (uniform_crossover_alleles alleles1 alleles2)
+        return (BinaryChromosome 0 new_alleles)
+    else return (BinaryChromosome 0 alleles1)
 ------------------------------------- MUTATION --------------------------------------------
 mutation' :: [Bool] -> IO [Bool]
 mutation' [] = return []
@@ -65,7 +74,7 @@ mutation' (allele:alleles) = do
 
     rest <- mutation' alleles
 
-    if mutate <= 2 then return $ ((not allele):rest)
+    if mutate <= 5 then return $ ((not allele):rest)
     else return $ (allele:rest)
 
 mutation :: Chromosome -> IO Chromosome

@@ -3,6 +3,8 @@ module Population where
 import System.IO
 import System.Random
 import Control.Monad
+import Control.Parallel.Strategies (parMap, rpar)
+
 import Data.List
 import DataTypes
 import Chromosome
@@ -22,56 +24,72 @@ generate_integer_permuted_population n_population n_genes = do
 --     let new_fitness = evaluate_chromosome (IntegerPermutedChromosome fitness alleles)
 --     in (IntegerPermutedChromosome new_fitness alleles) : (evaluate_population population)
 
--- average_fitness_population :: Population -> Int -> Float
--- average_fitness_population [] _ = 0.0
--- average_fitness_population ((IntegerPermutedChromosome fitness alleles):population) n_chromosomes = (fitness / (fromIntegral n_chromosomes)) + (average_fitness_population population n_chromosomes)
+evaluate_population :: Population -> Population
+evaluate_population [] = []
+evaluate_population population = 
+    let evaluatedPopulation = parMap rpar evaluateChromosome population
+    in evaluatedPopulation
+    where
+        evaluateChromosome :: Chromosome -> Chromosome
+        evaluateChromosome (IntegerPermutedChromosome fitness alleles) =
+            let newFitness = evaluate_chromosome (IntegerPermutedChromosome fitness alleles)
+            in IntegerPermutedChromosome newFitness alleles
+
+average_fitness_population :: Population -> Int -> Float
+average_fitness_population [] _ = 0.0
+average_fitness_population ((IntegerPermutedChromosome fitness _):population) n_chromosomes = ((fromIntegral fitness) / (fromIntegral n_chromosomes)) + (average_fitness_population population n_chromosomes)
 
 -- ------------------------------------- SELECT POPULATION --------------------------------------------
--- best_fitness_selection' :: Population -> Chromosome -> Chromosome
--- best_fitness_selection' [] x = x
--- best_fitness_selection' ((IntegerPermutedChromosome a b):xs) (IntegerPermutedChromosome c d)  | a > c = best_fitness_selection' xs (IntegerPermutedChromosome a b)
---                                                                             | otherwise = best_fitness_selection' xs (IntegerPermutedChromosome c d)
--- best_fitness_selection :: Population -> Chromosome
--- best_fitness_selection ((IntegerPermutedChromosome a b):xs) =  best_fitness_selection' xs (IntegerPermutedChromosome a b)
+best_fitness_selection' :: Population -> Chromosome -> Chromosome
+best_fitness_selection' [] x = x
+best_fitness_selection' ((IntegerPermutedChromosome a b):xs) (IntegerPermutedChromosome c d)  | a < c = best_fitness_selection' xs (IntegerPermutedChromosome a b)
+                                                                            | otherwise = best_fitness_selection' xs (IntegerPermutedChromosome c d)
+best_fitness_selection :: Population -> Chromosome
+best_fitness_selection ((IntegerPermutedChromosome a b):xs) =  best_fitness_selection' xs (IntegerPermutedChromosome a b)
 
--- random_element :: Population -> IO Chromosome
--- random_element population = do
---     index <- randomRIO (0, length population - 1)
---     return (population !! index)
+random_element :: Population -> IO Chromosome
+random_element population = do
+    index <- randomRIO (0, length population - 1)
+    return (population !! index)
 
--- random_elements :: Population -> Int -> IO Population
--- random_elements population n = sequence $ replicate n (random_element population)
+random_elements :: Population -> Int -> IO Population
+random_elements population n = sequence $ replicate n (random_element population)
 
--- tournament_selection :: Population -> IO Chromosome
--- tournament_selection population = do
---     random_chromosomes <- random_elements population 2
---     return $ best_fitness_selection random_chromosomes
+tournament_selection :: Population -> IO Chromosome
+tournament_selection population = do
+    random_chromosomes <- random_elements population 2
+    return $ best_fitness_selection random_chromosomes
 
 -- ------------------------------------- GENERATION --------------------------------------------
--- evolve :: Population -> Int -> IO Population
--- evolve _ 0 = return []
--- evolve population n = do
---     parent_1 <- tournament_selection population
---     parent_2 <- tournament_selection population
+evolve :: Population -> Int -> IO Population
+evolve _ 0 = return []
+evolve population n = do
+    parent_1 <- tournament_selection population
+    parent_2 <- tournament_selection population
 
---     children' <- uniform_crossover_chromosomes parent_1 parent_2
---     children <- mutation children'
+    let (children_1, children_2) = cycle_crossover parent_1 parent_2
 
---     rest <- evolve population (n - 1)
+    children_1' <- swap_mutation children_1
+    children_2' <- swap_mutation children_2
 
---     return $ children:rest
+    rest <- evolve population (n - 2)
 
--- genetic_algorithm :: Population -> Int -> IO ()
--- genetic_algorithm _ 0 = return ()
--- genetic_algorithm population max_generations = do
---     let evaluated_population = evaluate_population population
---     new_generation <- evolve evaluated_population (length evaluated_population)
+    return $ children_1':children_2':rest
 
---     let evaluated_new_generation = evaluate_population new_generation
---     let (IntegerPermutedChromosome f a) = best_fitness_selection evaluated_new_generation
+genetic_algorithm :: Population -> Int -> IO ()
+genetic_algorithm _ 0 = return ()
+genetic_algorithm population max_generations = do
 
---     print (IntegerPermutedChromosome f a)
-    
---     genetic_algorithm evaluated_new_generation (max_generations - 1)
+    new_generation <- evolve population (length population)
+
+    let ep   = evaluate_population new_generation
+    let av   = average_fitness_population ep (length ep)
+    let best = best_fitness_selection ep
+
+    appendFile "saida.txt" $ show (fitness_chromossome best) ++ " " ++ show av ++ "\n"
+
+    if (fitness_chromossome best) /= 0 then
+        genetic_algorithm ep (max_generations - 1)
+    else print best
 
     

@@ -6,6 +6,12 @@ import Control.Monad
 import Data.List
 import DataTypes
 
+instance Eq Chromosome where
+    (==) a b = (==) (fitness_chromossome a) (fitness_chromossome b)
+
+instance Ord Chromosome where 
+    compare a b = compare (fitness_chromossome a) (fitness_chromossome b)
+
 ------------------------------------- GETS --------------------------------------------
 fitness_chromossome :: Chromosome -> Float
 fitness_chromossome (BinaryChromosome f _) = f

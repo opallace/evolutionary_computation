@@ -58,7 +58,7 @@ random_elements population n = sequence $ replicate n (random_element population
 
 tournament_selection :: Population -> IO Chromosome
 tournament_selection population = do
-    random_chromosomes <- random_elements population 10
+    random_chromosomes <- random_elements population 3
     return $ best_fitness_selection random_chromosomes
 
 ------------------------------------- GENERATION --------------------------------------------
@@ -78,16 +78,17 @@ evolve population n = do
 genetic_algorithm :: Population -> Int -> [[Int]] -> IO ()
 genetic_algorithm _ 0 _ = return ()
 genetic_algorithm population max_generations content = do
-    let evaluated_population = evaluate_population content population
+    let elit = n_best_fitness_selection 10 population
+
+    new_generation <- evolve population ((length population) - 10)
     
-    new_generation <- evolve evaluated_population ((length evaluated_population) - 5)
-    let elit = n_best_fitness_selection 5 evaluated_population
+    let ev   = evaluate_population content (new_generation++elit)
+    let av   = average_fitness_population ev (length ev)
+    let best = best_fitness_selection ev
 
-    let evaluated_new_generation = evaluate_population content (new_generation++elit)
-    let (BinaryChromosome f a) = best_fitness_selection evaluated_new_generation
+    appendFile "saida.txt" $ show (fitness_chromossome best) ++ " " ++ show av ++ "\n"
+    -- print $ show (fitness_chromossome best) ++ " " ++ show av ++ "\n"
 
-    print f
-
-    if f == 430 
-        then print (BinaryChromosome f a)
-        else genetic_algorithm evaluated_new_generation (max_generations - 1) content
+    if fitness_chromossome best == 430 
+        then print best
+        else genetic_algorithm ev (max_generations - 1) content

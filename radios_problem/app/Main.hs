@@ -15,6 +15,7 @@ readFileLines path = do
 main :: IO()
 main = do
     population <- generate_boolean_population 20 10 (False, True)
-    genetic_algorithm population 100
+    let ev = evaluate_population population
+    genetic_algorithm ev 10000
 
    
