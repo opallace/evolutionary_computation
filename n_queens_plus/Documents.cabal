@@ -8,7 +8,7 @@ maintainer:         wmielniczki15@gmail.com
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
 common flags
-    ghc-options: -Wall -O2 -fllvm -threaded -with-rtsopts=-N -feager-blackholing
+    ghc-options: -Wall
 
 executable n-queens
     import:           flags
@@ -16,8 +16,9 @@ executable n-queens
     other-modules:    Chromosome
                       DataTypes
                       Population
-    build-depends:    base >=4.13,
-                      random >= 1.2
+    build-depends:    base ^>=4.13,
+                      random >= 1.2,
+                      containers >= 0.6.7
     hs-source-dirs:   app
                       app/modules
     default-language: Haskell2010

@@ -22,7 +22,7 @@ shuffle xs = do
 generate_integer_permuted_chromosome :: Int -> IO Chromosome
 generate_integer_permuted_chromosome n_genes = do
     alleles <- shuffle [1..n_genes]
-    return (IntegerPermutedChromosome 0 alleles)
+    return (IntegerPermutedChromosome 0.0 alleles)
 
 ------------------------------------- EVALUATE --------------------------------------------
 
@@ -32,40 +32,44 @@ create_table n = [[fromIntegral (i + j) | j <- [1..n]] | i <- [0, n..(n * (n - 1
 process_table :: [[Double]] -> [[Double]]
 process_table = zipWith ($) (cycle [map sqrt, map (logBase 10)])
 
+get_fo_max :: [[Double]] -> Double
+get_fo_max [] = 0.0
+get_fo_max (x:xs) = (last x) + get_fo_max xs
+
 evaluate_chromosome :: Chromosome -> [[Double]] -> Double
 evaluate_chromosome (IntegerPermutedChromosome _ alleles) table = 
     let queens = zip [1..(length alleles)] alleles
         
         fo           = evaluate_chromosome'' queens table
-        fo_max       = sum (concat (process_table [last table]))
+        fo_max       = get_fo_max table
         colisoes     = fromIntegral(evaluate_chromosome' queens)
         colisoes_max = fromIntegral(length alleles)
         r            = -1.0
     
-    in ((fo / fo_max) + r * (colisoes / colisoes_max))
+    in (fo / fo_max) + r * (colisoes / colisoes_max)
     
-    where
-        evaluate_chromosome' :: [(Int, Int)] -> Int
-        evaluate_chromosome' lista =  sum (aplicarOuLista (chunksOf (length lista - 1) [check_queen_conflic x y | x <- lista, y <- lista, x /= y]))
 
-        chunksOf :: Int -> [Int] -> [[Int]]
-        chunksOf _ [] = []
-        chunksOf n lista = take n lista : chunksOf n (drop n lista)
+evaluate_chromosome' :: [(Int, Int)] -> Int
+evaluate_chromosome' lista =  sum (aplicarOuLista (chunksOf (length lista - 1) [check_queen_conflic x y | x <- lista, y <- lista, x /= y]))
 
-        aplicarOuLista :: [[Int]] -> [Int]
-        aplicarOuLista = map (foldr1 (\x y -> if x /= 0 || y /= 0 then 1 else 0))
+chunksOf :: Int -> [Int] -> [[Int]]
+chunksOf _ [] = []
+chunksOf n lista = take n lista : chunksOf n (drop n lista)
 
-        check_queen_conflic :: (Int, Int) -> (Int, Int) -> Int
-        check_queen_conflic (ax, ay) (bx, by) = 
-            if abs (ax - bx) == abs (ay - by) then 1
-            else 0
+aplicarOuLista :: [[Int]] -> [Int]
+aplicarOuLista = map (foldr1 (\x y -> if x /= 0 || y /= 0 then 1 else 0))
 
-        evaluate_chromosome'' :: [(Int, Int)] -> [[Double]] -> Double
-        evaluate_chromosome'' [] _ = 0.0
-        evaluate_chromosome'' (x:xs) table = (get_value_table x table) + (evaluate_chromosome'' xs table)
-        
-        get_value_table :: (Int, Int) -> [[Double]] -> Double
-        get_value_table (i,j) table = (table !! (i - 1)) !! (j - 1)
+check_queen_conflic :: (Int, Int) -> (Int, Int) -> Int
+check_queen_conflic (ax, ay) (bx, by) = 
+    if abs (ax - bx) == abs (ay - by) then 1
+    else 0
+
+evaluate_chromosome'' :: [(Int, Int)] -> [[Double]] -> Double
+evaluate_chromosome'' [] _ = 0.0
+evaluate_chromosome'' (x:xs) table = (get_value_table x table) + (evaluate_chromosome'' xs table)
+
+get_value_table :: (Int, Int) -> [[Double]] -> Double
+get_value_table (i,j) table = (table !! (i - 1)) !! (j - 1)
 
 ------------------------------------- CROSSOVER --------------------------------------------
 find_element :: [Int] -> Int -> Int -> Maybe Int
@@ -100,8 +104,8 @@ cycle_crossover (IntegerPermutedChromosome _ a1) (IntegerPermutedChromosome _ a2
         Just (c1, c2) -> 
             let a1' = cycle_crossover' a1 a2 c1
                 a2' = cycle_crossover' a2 a1 c2
-            in ((IntegerPermutedChromosome 0 a1'),(IntegerPermutedChromosome 0 a2'))
-        Nothing       -> (IntegerPermutedChromosome 0 [], IntegerPermutedChromosome 0 [])
+            in ((IntegerPermutedChromosome 0.0 a1'),(IntegerPermutedChromosome 0.0 a2'))
+        Nothing       -> (IntegerPermutedChromosome 0.0 [], IntegerPermutedChromosome 0.0 [])
 
 ------------------------------------- MUTATION --------------------------------------------
 swap :: Int -> Int -> [Int] -> [Int]
@@ -125,5 +129,5 @@ swap_mutation (IntegerPermutedChromosome _ alleles) = do
     if p < 5 then do
         i <- randomRIO (0, (length alleles) - 1)
         j <- randomRIO (0, (length alleles) - 1)
-        return (IntegerPermutedChromosome 0 (swap i j alleles))
-    else return (IntegerPermutedChromosome 0 alleles)
+        return (IntegerPermutedChromosome 0.0 (swap i j alleles))
+    else return (IntegerPermutedChromosome 0.0 alleles)

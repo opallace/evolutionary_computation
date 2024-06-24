@@ -75,17 +75,25 @@ evolve population n = do
     return $ children_1':children_2':rest
 
 genetic_algorithm :: Population -> [[Double]] -> Int -> IO ()
-genetic_algorithm _ _ 0 = return ()
-genetic_algorithm population table max_generations = do
-    let elit = n_best_fitness_selection 3 population
+genetic_algorithm population table 0 = do
+    let (IntegerPermutedChromosome f alleles) = best_fitness_selection population
+    let queens = zip [1..(length alleles)] alleles
 
-    new_generation <- evolve population ((length population) - 3)
+    print $ evaluate_chromosome' queens
+    print $ f
+    print $ evaluate_chromosome'' queens table
+    print $ alleles
+
+genetic_algorithm population table max_generations = do
+    let elit = n_best_fitness_selection 6 population
+
+    new_generation <- evolve population ((length population) - 6)
 
     let ep   = evaluate_population (new_generation++elit) table
     let av   = average_fitness_population ep (length ep)
     let best = best_fitness_selection ep
 
-    appendFile "saida.txt" $ show (fitness_chromossome best) ++ " " ++ show av ++ "\n"
+    -- appendFile "saida.txt" $ show (fitness_chromossome best) ++ " " ++ show av ++ "\n"
     genetic_algorithm ep table (max_generations - 1)
 
     
